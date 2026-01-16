@@ -21,8 +21,7 @@
         return;
       }
 
-      // ✅ DOMAIN LOCKING
-      // allowed_domains can be empty (allow all) or comma-separated domains.
+      // ✅ DOMAIN LOCKING (allow all if empty)
       var allowed = (config.allowed_domains || "").trim();
       if (allowed) {
         var host = (window.location.hostname || "").toLowerCase();
@@ -33,16 +32,9 @@
           })
           .filter(Boolean);
 
-        var ok = allowedList.indexOf(host) !== -1;
-
-        if (!ok) {
-          console.warn(
-            "Whitelabel Widget blocked on this domain:",
-            host,
-            "Allowed:",
-            allowedList
-          );
-          return; // Do not render widget
+        if (allowedList.indexOf(host) === -1) {
+          console.warn("Whitelabel Widget blocked on:", host, "Allowed:", allowedList);
+          return;
         }
       }
 
@@ -53,13 +45,15 @@
     });
 
   function createWidget(config) {
+    var primary = config.primary_color || "#2563EB";
+
     // Floating button
     var button = document.createElement("div");
     button.innerText = config.button_text || "Open";
     button.style.position = "fixed";
     button.style.bottom = "20px";
     button.style.right = "20px";
-    button.style.background = config.primary_color || "#2563EB";
+    button.style.background = primary;
     button.style.color = "#fff";
     button.style.padding = "14px 18px";
     button.style.borderRadius = "999px";
@@ -75,20 +69,21 @@
     overlay.style.left = "0";
     overlay.style.width = "100%";
     overlay.style.height = "100%";
-    overlay.style.background = "rgba(0,0,0,0.5)";
+    overlay.style.background = "rgba(0,0,0,0.55)";
     overlay.style.display = "none";
     overlay.style.zIndex = "999998";
 
     // Modal
     var modal = document.createElement("div");
     modal.style.background = "#fff";
-    modal.style.width = "90%";
-    modal.style.maxWidth = "420px";
-    modal.style.margin = "10% auto";
-    modal.style.borderRadius = "12px";
-    modal.style.padding = "20px";
+    modal.style.width = "92%";
+    modal.style.maxWidth = "520px";
+    modal.style.margin = "8% auto";
+    modal.style.borderRadius = "14px";
+    modal.style.padding = "18px";
     modal.style.fontFamily = "Arial, sans-serif";
     modal.style.position = "relative";
+    modal.style.boxShadow = "0 10px 30px rgba(0,0,0,0.25)";
 
     // Close button
     var close = document.createElement("div");
@@ -98,36 +93,74 @@
     close.style.right = "12px";
     close.style.cursor = "pointer";
     close.style.fontSize = "18px";
+    close.style.lineHeight = "18px";
+    close.style.padding = "6px 8px";
+    close.style.borderRadius = "8px";
+
+    // Header row (logo + business name)
+    var header = document.createElement("div");
+    header.style.display = "flex";
+    header.style.alignItems = "center";
+    header.style.gap = "10px";
+    header.style.marginBottom = "10px";
+
+    // Logo (optional)
+    if (config.logo_url && String(config.logo_url).trim()) {
+      var logo = document.createElement("img");
+      logo.src = String(config.logo_url).trim();
+      logo.alt = (config.business_name || "Logo");
+      logo.style.width = "40px";
+      logo.style.height = "40px";
+      logo.style.objectFit = "contain";
+      logo.style.borderRadius = "10px";
+      header.appendChild(logo);
+    }
+
+    // Business name (optional)
+    var biz = document.createElement("div");
+    biz.style.fontWeight = "700";
+    biz.style.fontSize = "16px";
+    biz.style.color = "#111827";
+    biz.innerText = config.business_name ? String(config.business_name) : "";
+    header.appendChild(biz);
 
     // Title
     var title = document.createElement("h3");
     title.innerText = config.modal_title || "Welcome";
-    title.style.marginTop = "0";
+    title.style.margin = "10px 0 0 0";
+    title.style.fontSize = "18px";
 
     modal.appendChild(close);
+    if ((config.logo_url && String(config.logo_url).trim()) || (config.business_name && String(config.business_name).trim())) {
+      modal.appendChild(header);
+    }
     modal.appendChild(title);
 
     // Content
-    if (config.embed_type === "iframe") {
+    if (String(config.embed_type).toLowerCase() === "iframe") {
       var iframe = document.createElement("iframe");
-      iframe.src = config.cta_link;
+      iframe.src = config.cta_link || "";
       iframe.style.width = "100%";
-      iframe.style.height = "400px";
+      iframe.style.height = "460px";
       iframe.style.border = "none";
+      iframe.style.marginTop = "12px";
+      iframe.style.borderRadius = "10px";
       modal.appendChild(iframe);
     } else {
       var cta = document.createElement("a");
       cta.innerText = config.button_text || "Continue";
-      cta.href = config.cta_link;
+      cta.href = config.cta_link || "#";
       cta.target = "_blank";
+      cta.rel = "noopener";
       cta.style.display = "block";
-      cta.style.marginTop = "20px";
+      cta.style.marginTop = "16px";
       cta.style.textAlign = "center";
-      cta.style.background = config.primary_color || "#2563EB";
+      cta.style.background = primary;
       cta.style.color = "#fff";
       cta.style.padding = "12px";
-      cta.style.borderRadius = "8px";
+      cta.style.borderRadius = "10px";
       cta.style.textDecoration = "none";
+      cta.style.fontWeight = "700";
       modal.appendChild(cta);
     }
 
@@ -139,8 +172,17 @@
       overlay.style.display = "block";
     };
 
-    close.onclick = overlay.onclick = function () {
+    close.onclick = function (e) {
+      e.stopPropagation();
       overlay.style.display = "none";
+    };
+
+    overlay.onclick = function () {
+      overlay.style.display = "none";
+    };
+
+    modal.onclick = function (e) {
+      e.stopPropagation();
     };
   }
 })();
