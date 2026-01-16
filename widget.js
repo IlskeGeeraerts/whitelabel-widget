@@ -9,7 +9,7 @@
 
   var CONFIG_URL =
     "https://script.google.com/macros/s/AKfycbxPdomkVE0TmliurP5jyVO1VawFuApUNkFy4h7Zi2K0gyQYqPDMCWDm0esmUo5ngRXf/exec?widget_id=" +
-    widgetId;
+    encodeURIComponent(widgetId);
 
   fetch(CONFIG_URL)
     .then(function (res) {
@@ -20,7 +20,36 @@
         console.error("Whitelabel Widget:", config.error);
         return;
       }
+
+      // ✅ DOMAIN LOCKING
+      // allowed_domains can be empty (allow all) or comma-separated domains.
+      var allowed = (config.allowed_domains || "").trim();
+      if (allowed) {
+        var host = (window.location.hostname || "").toLowerCase();
+        var allowedList = allowed
+          .split(",")
+          .map(function (d) {
+            return d.trim().toLowerCase();
+          })
+          .filter(Boolean);
+
+        var ok = allowedList.indexOf(host) !== -1;
+
+        if (!ok) {
+          console.warn(
+            "Whitelabel Widget blocked on this domain:",
+            host,
+            "Allowed:",
+            allowedList
+          );
+          return; // Do not render widget
+        }
+      }
+
       createWidget(config);
+    })
+    .catch(function (err) {
+      console.error("Whitelabel Widget Error:", err);
     });
 
   function createWidget(config) {
