@@ -8,7 +8,7 @@
   }
 
   var CONFIG_URL =
-    "https://script.google.com/macros/s/AKfycbxPdomkVE0TmliurP5jyVO1VawFuApUNkFy4h7Zi2K0gyQYqPDMCWDm0esmUo5ngRXf/exec?widget_id=" +
+    "https://script.google.com/macros/s/AKfycbyV9nCqN-bs5Fb5Xoa07HhbDIVP69Le53WNP2jq7cPNn_r1d-H71JMTQAifZHjurGhF/exec?widget_id=" +
     encodeURIComponent(widgetId);
 
   fetch(CONFIG_URL)
